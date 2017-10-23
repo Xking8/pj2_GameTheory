@@ -45,6 +45,11 @@ public:
 	 *  '93.7%': 93.7% (937 games) reached 8192-tiles in saved games (a.k.a. win rate of 8192-tile)
 	 *  '22.4%': 22.4% (224 games) terminated with 8192-tiles (the largest) in saved games
 	 */
+	int fibdriver(int n) const{
+		if (n>=2)
+			n++;
+		return fib(n);
+	}
 	int fib(int n) const{
 		if(n==0)
 			return 0;
@@ -82,7 +87,7 @@ public:
 		for (int t = 0, c = 0; c < block; c += stat[t++]) {
 			if (stat[t] == 0) continue;
 			int accu = std::accumulate(stat + t, stat + 24, 0);
-			std::cout << "\t" << (fib(t)) << "\t" << (accu * coef) << "%";
+			std::cout << "\t" << (fibdriver(t)) << "\t" << (accu * coef) << "%";
 			std::cout << "\t(" << (stat[t] * coef) << "%)" << std::endl;
 		}
 		std::cout << std::endl;

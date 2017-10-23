@@ -72,10 +72,14 @@ int main(int argc, const char* argv[]) {
 		board game = stat.make_empty_board();
 		while (true) {
 			agent& who = stat.take_turns(play, evil);
+			//if (agent==player) who.setstate(game)..
 			action move = who.take_action(game);
 			if (move.apply(game) == -1) break;
 			stat.save_action(move);
 			if (who.check_for_win(game)) break;
+			//std::cout<<game;
+			//std::cout<<std::endl;
+			
 		}
 		agent& win = stat.last_turns(play, evil);
 		stat.close_episode(win.name());
