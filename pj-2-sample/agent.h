@@ -8,7 +8,7 @@
 #include "board.h"
 #include "action.h"
 #include "weight.h"
-
+#include "limits.h"
 class agent {
 public:
 	agent(const std::string& args = "") {
@@ -76,7 +76,7 @@ private:
  */
 class player : public agent {
 public:
-	player(const std::string& args = "") : agent("name=player " + args), alpha(0.00325f) {//0.0025
+	player(const std::string& args = "") : agent("name=player " + args), alpha(0.000125f) {//0.0025
 		episode.reserve(32768);
 		if (property.find("seed") != property.end())
 			engine.seed(int(property["seed"]));
@@ -96,6 +96,7 @@ public:
 			weights.push_back(std::pow(24,4));//weights[6]
 			weights.push_back(std::pow(24,4));//weights[7]
 		}
+		//std::cout<<"alpha: "<<alpha<<std::endl;
 	}
 	~player() {
 		if (property.find("save") != property.end())
@@ -108,23 +109,26 @@ public:
 	}
 
 	void update(board& after, double TDerror) {	
+		//std::cout<<"updating"<<std::endl;
 		for(int i=0;i<4;i++) {
-			int index = 0;
+			long long index = 0;
 			for(int j=0;j<4;j++) {
 				index += after[i][j]*std::pow(24,3-j);
 				
 			}
 			weights[i][index] += alpha*TDerror;// /8;
+			//std::cout<<"updating weight["<<i<<","<<index<<"] to "<<alpha*TDerror<<" ="<<weights[i][index]<<std::endl;
 			//after[0][0]*std::pow(24,3)
 		}
 		for(int i=0;i<4;i++) {
-			int index = 0;
+			long long index = 0;
 			for(int j=0;j<4;j++) {
 				index += after[j][i]*std::pow(24,3-j);
 				
 			}
 			weights[i+4][index] += alpha*TDerror;// /8;
 			//after[0][0]*std::pow(24,3)
+			//std::cout<<"updating weight["<<i+4<<","<<index<<"] to "<<alpha*TDerror<<" ="<<weights[i+4][index]<<std::endl;
 		}
 	}
 
@@ -138,12 +142,13 @@ public:
 			{
 				//std::cout<<"testing close episode:\n"<<episode[i].before<<"\ntaking action"<<episode[i].move<<":\n"<<episode[i].after<<std::endl;
 				update(episode[i].after,-approx(episode[i].after));		
-
+				std::cout<<"stage5"<<std::endl;
 			}
 			else
 			{
 				double TDerror = episode[i].reward + approx(episode[i].after)-approx(episode[i-1].after);
 				update(episode[i-1].after, TDerror);
+				std::cout<<"stage6"<<std::endl;
 			}
 
 			
@@ -154,21 +159,27 @@ public:
 		std::cout << "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeE"<<std::endl;*/
 	}
 	virtual action take_action(const board& before) {
+		std::cout<<"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"<<std::endl;
 		action best;
 		//int opcode[] = { 0, 1, 2, 3 };
-		int max = -1;
-		int max_action = -1;
+		int max = INT_MIN;
+		int max_action = 0;
+		std::cout<<"stage1"<<std::endl;
 		for(int i=0;i<4;i++)
 		{
-			int value=evaluate(before,i);
+			std::cout<<"stage1-1"<<std::endl;
+			double value=evaluate(before,i);
+			std::cout<<"stage1-2"<<std::endl;
 			if(value > max)
 			{
+				std::cout<<"====================================================="<<std::endl;
 				max_action = i;
 				max = value;
 			}
 		}
 		//std::cout<<"max_evaluation:"<< max <<std::endl;
 		best = action(max_action);
+		std::cout<<"stage2"<<std::endl;
 		
 		state_pack.before = before;
 		state_pack.move = action(max_action);
@@ -177,30 +188,52 @@ public:
 		state_pack.after = after;
 		state_pack.reward = reward;
 		episode.push_back(state_pack);
-		//std::cout<<"max_action: "<<max_action<<std::endl;
+		std::cout<<"stage3"<<std::endl;
+		std::cout<<"max_action: "<<max_action<<std::endl;
 		
 		// TODO: select a proper action
 		// TODO: push the step into episode
+		
 		//best = action(0);
 		return best;
 	}
 	double evaluate(const board& before, int act)
 	{
+		std::cout<<"stage2-1"<<std::endl;
 		board after = before;
 		double reward = compute_afterstate(after,act);
+		std::cout<<"stage2-2:"<<std::endl;
 		state_pack.after = after;
 		state_pack.reward = reward;
+		std::cout<<"stage2-3:"<<std::endl;
 		return reward+approx(after);
 	}
 	double compute_afterstate(board& after, int act) {
+		
+		std::cout<<"ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"<<std::endl;
 		int reward = after.move(act);
+		std::cout<<"----------------------------------------------------------"<<std::endl;
+		std::cout<<"stage6-1"<<std::endl;
+		for (int i=0;i<4;i++) {
+			for(int j=0;j<4;j++)
+			{
+				std::cout<<after[i][j]<<" ";
+			}
+
+			std::cout<<"stage3-1"<<std::endl;
+		}
+		fflush(stdout);
 		return reward;
 	}
 	double approx(board& after) {
 		//...
+		std::cout<<"stage3-1"<<std::endl;
+		//std::cout<<after;
+		//fflush(stdout);
+		std::cout<<"stage3-1-1"<<std::endl;
 		double appr = 0;
 		for(int i=0;i<4;i++) {
-			int index = 0;
+			long long index = 0;
 			for(int j=0;j<4;j++) {
 				index += after[i][j]*std::pow(24,3-j);
 				
@@ -208,15 +241,25 @@ public:
 			appr += weights[i][index];
 			//after[0][0]*std::pow(24,3)
 		}
+		std::cout<<"stage3-2"<<std::endl;
 		for(int i=0;i<4;i++) {
-			int index = 0;
+			std::cout<<"stage4-1"<<std::endl;
+			long long index = 0;
+			std::cout<<"stage4-2"<<std::endl;
 			for(int j=0;j<4;j++) {
+				std::cout<<"stage4-3 index = "<<index<<std::endl;
 				index += after[j][i]*std::pow(24,3-j);
+				std::cout<<"stage4-4 after add index = "<<index<<" detail:"<<"after("<<i<<","<<j<<")"<<after[j][i]<<" "<<std::pow(24,3-j)<<std::endl;
 				
 			}
+			std::cout<<"stage4-5: "<<appr<<" "/*<<weights[i+4][index]*/<<std::endl;
+			std::cout<<"stage4-5-1: "<<i+4<<" index:"<<index<<" "<<std::endl;
+			std::cout<<"stage4-5-2: "<<weights[i+4][index]<<std::endl;
 			appr += weights[i+4][index];
+			std::cout<<"stage4-6"<<std::endl;
 			//after[0][0]*std::pow(24,3)
 		}
+		std::cout<<"stage3-3"<<std::endl;
 		return appr;
 	}
 	

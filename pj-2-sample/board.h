@@ -76,12 +76,16 @@ public:
 
 	int move_left() {
 		board prev = *this;
+		std::cout<<prev;
 		int score = 0;
 		for (int r = 0; r < 4; r++) {
 			auto& row = tile[r];
 			int top = 0, hold = 0;
 			for (int c = 0; c < 4; c++) {
 				int tile = row[c];
+				if (tile ==-1)
+					std::cout<<"sssssssssssssssssssssssssssssssssssssssssssssssssssssss"<<std::endl;
+				//std::cout<<prev;
 				if (tile == 0) continue;
 				row[c] = 0;
 				if (hold) {
