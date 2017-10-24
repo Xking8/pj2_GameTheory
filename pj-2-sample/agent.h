@@ -76,7 +76,7 @@ private:
  */
 class player : public agent {
 public:
-	player(const std::string& args = "") : agent("name=player " + args), alpha(0.0025f) {
+	player(const std::string& args = "") : agent("name=player " + args), alpha(0.0125f) {//0.0025
 		episode.reserve(32768);
 		if (property.find("seed") != property.end())
 			engine.seed(int(property["seed"]));
@@ -137,7 +137,7 @@ public:
 			if(i==episode.size()-1)
 			{
 				//std::cout<<"testing close episode:\n"<<episode[i].before<<"\ntaking action"<<episode[i].move<<":\n"<<episode[i].after<<std::endl;
-				update(episode[i].after,0);		
+				update(episode[i].after,-approx(episode[i].after));		
 
 			}
 			else
