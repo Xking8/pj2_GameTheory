@@ -76,7 +76,7 @@ private:
  */
 class player : public agent {
 public:
-	player(const std::string& args = "") : agent("name=player " + args), alpha(0.0025f) {//0.0025
+	player(const std::string& args = "") : agent("name=player " + args), alpha(0.00325f) {//0.0025
 		episode.reserve(32768);
 		if (property.find("seed") != property.end())
 			engine.seed(int(property["seed"]));
