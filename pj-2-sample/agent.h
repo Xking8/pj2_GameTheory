@@ -76,7 +76,7 @@ private:
  */
 class player : public agent {
 public:
-	player(const std::string& args = "") : agent("name=player " + args), alpha(0.000125f) {//0.0025
+	player(const std::string& args = "") : agent("name=player " + args), alpha(0.00125f) {//0.0025
 		episode.reserve(32768);
 		if (property.find("seed") != property.end())
 			engine.seed(int(property["seed"]));
@@ -136,19 +136,17 @@ public:
 		//std::cout<<"testing close episode:\n"<<episode[0].before<<"\ntaking action"<<episode[0].move<<":\n"<<episode[0].after<<std::endl;
 		// TODO: train the n-tuple network by TD(0)
 		//std::cout<<"..."<<episode.size()<<std::endl;
-		for(int i = episode.size()-1; i>=0; i--)
+		for(int i = episode.size()-2; i>=1; i--)
 		{	
-			if(i==episode.size()-1)
+			if(i==episode.size()-2)
 			{
 				//std::cout<<"testing close episode:\n"<<episode[i].before<<"\ntaking action"<<episode[i].move<<":\n"<<episode[i].after<<std::endl;
 				update(episode[i].after,-approx(episode[i].after));		
-				std::cout<<"stage5"<<std::endl;
 			}
 			else
 			{
 				double TDerror = episode[i].reward + approx(episode[i].after)-approx(episode[i-1].after);
 				update(episode[i-1].after, TDerror);
-				std::cout<<"stage6"<<std::endl;
 			}
 
 			
@@ -159,27 +157,21 @@ public:
 		std::cout << "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeE"<<std::endl;*/
 	}
 	virtual action take_action(const board& before) {
-		std::cout<<"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"<<std::endl;
 		action best;
 		//int opcode[] = { 0, 1, 2, 3 };
 		int max = INT_MIN;
 		int max_action = 0;
-		std::cout<<"stage1"<<std::endl;
 		for(int i=0;i<4;i++)
 		{
-			std::cout<<"stage1-1"<<std::endl;
 			double value=evaluate(before,i);
-			std::cout<<"stage1-2"<<std::endl;
 			if(value > max)
 			{
-				std::cout<<"====================================================="<<std::endl;
 				max_action = i;
 				max = value;
 			}
 		}
 		//std::cout<<"max_evaluation:"<< max <<std::endl;
 		best = action(max_action);
-		std::cout<<"stage2"<<std::endl;
 		
 		state_pack.before = before;
 		state_pack.move = action(max_action);
@@ -188,8 +180,6 @@ public:
 		state_pack.after = after;
 		state_pack.reward = reward;
 		episode.push_back(state_pack);
-		std::cout<<"stage3"<<std::endl;
-		std::cout<<"max_action: "<<max_action<<std::endl;
 		
 		// TODO: select a proper action
 		// TODO: push the step into episode
@@ -199,38 +189,23 @@ public:
 	}
 	double evaluate(const board& before, int act)
 	{
-		std::cout<<"stage2-1"<<std::endl;
 		board after = before;
 		double reward = compute_afterstate(after,act);
-		std::cout<<"stage2-2:"<<std::endl;
-		state_pack.after = after;
-		state_pack.reward = reward;
-		std::cout<<"stage2-3:"<<std::endl;
+		if(reward == -1)
+			return INT_MIN;
+		//state_pack.after = after;
+		//state_pack.reward = reward;
 		return reward+approx(after);
 	}
 	double compute_afterstate(board& after, int act) {
 		
-		std::cout<<"ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"<<std::endl;
 		int reward = after.move(act);
-		std::cout<<"----------------------------------------------------------"<<std::endl;
-		std::cout<<"stage6-1"<<std::endl;
-		for (int i=0;i<4;i++) {
-			for(int j=0;j<4;j++)
-			{
-				std::cout<<after[i][j]<<" ";
-			}
-
-			std::cout<<"stage3-1"<<std::endl;
-		}
-		fflush(stdout);
 		return reward;
 	}
 	double approx(board& after) {
 		//...
-		std::cout<<"stage3-1"<<std::endl;
 		//std::cout<<after;
 		//fflush(stdout);
-		std::cout<<"stage3-1-1"<<std::endl;
 		double appr = 0;
 		for(int i=0;i<4;i++) {
 			long long index = 0;
@@ -241,25 +216,15 @@ public:
 			appr += weights[i][index];
 			//after[0][0]*std::pow(24,3)
 		}
-		std::cout<<"stage3-2"<<std::endl;
 		for(int i=0;i<4;i++) {
-			std::cout<<"stage4-1"<<std::endl;
 			long long index = 0;
-			std::cout<<"stage4-2"<<std::endl;
 			for(int j=0;j<4;j++) {
-				std::cout<<"stage4-3 index = "<<index<<std::endl;
 				index += after[j][i]*std::pow(24,3-j);
-				std::cout<<"stage4-4 after add index = "<<index<<" detail:"<<"after("<<i<<","<<j<<")"<<after[j][i]<<" "<<std::pow(24,3-j)<<std::endl;
 				
 			}
-			std::cout<<"stage4-5: "<<appr<<" "/*<<weights[i+4][index]*/<<std::endl;
-			std::cout<<"stage4-5-1: "<<i+4<<" index:"<<index<<" "<<std::endl;
-			std::cout<<"stage4-5-2: "<<weights[i+4][index]<<std::endl;
 			appr += weights[i+4][index];
-			std::cout<<"stage4-6"<<std::endl;
 			//after[0][0]*std::pow(24,3)
 		}
-		std::cout<<"stage3-3"<<std::endl;
 		return appr;
 	}
 	
